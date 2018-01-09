@@ -5,9 +5,9 @@
  *      Author: jrugis
  */
 
-#include "cParotid.h"
-#include "cCell_x.h"
-#include "cAcinus.h"
+#include "cParotid.hpp"
+#include "cCell_x.hpp"
+#include "cAcinus.hpp"
 
 cAcinus::cAcinus(int i, cParotid* p) {
 	id = i;

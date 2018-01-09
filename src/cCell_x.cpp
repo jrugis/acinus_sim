@@ -5,9 +5,9 @@
  *      Author: jrugis
  */
 
-#include "cAcinus.h"
-#include "cCellMesh.h"
-#include "cCell_x.h"
+#include "cAcinus.hpp"
+#include "cCellMesh.hpp"
+#include "cCell_x.hpp"
 
 cCell_x::cCell_x(int i, cAcinus* p) {
 	id = i;

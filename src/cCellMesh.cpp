@@ -15,7 +15,7 @@
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/split.hpp>
 
-#include "cCellMesh.h"
+#include "cCellMesh.hpp"
 
 cCellMesh::cCellMesh(std::string file_name){
 	// initialise member variables

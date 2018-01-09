@@ -8,7 +8,7 @@ CPP_DEFS = -fopenmp
 #CPP_DEFS = -DVIENNACL_WITH_OPENMP -fopenmp
 
 ###########################################################################################
-## NOTE: uncomment for ONE of debug, profile or optimised
+## NOTE: uncomment block for ONE of debug, profile or optimised
 
 ## debug
 #EXE = parotid_sim_debug
@@ -33,13 +33,13 @@ all: $(EXE)
 main.o: $(SRC)/main.cpp
 	$(CPP) $(CPP_FLAGS) -o $@ -c $<
 
-cParotid.o: $(SRC)/cParotid.cpp $(SRC)/cParotid.h
+cParotid.o: $(SRC)/cParotid.cpp $(SRC)/cParotid.hpp
 	$(CPP) $(CPP_FLAGS) -o $@ -c $<
 
-cAcinus.o: $(SRC)/cAcinus.cpp $(SRC)/cAcinus.h
+cAcinus.o: $(SRC)/cAcinus.cpp $(SRC)/cAcinus.hpp
 	$(CPP) $(CPP_FLAGS) -o $@ -c $<
 
-cCell_x.o: $(SRC)/cCell_x.cpp $(SRC)/cCell_x.h
+cCell_x.o: $(SRC)/cCell_x.cpp $(SRC)/cCell_x.hpp
 	$(CPP) $(CPP_FLAGS) -o $@ -c $<
 
 $(EXE): $(OBJS)

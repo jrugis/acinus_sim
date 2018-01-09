@@ -12,7 +12,7 @@
 #include <sys/time.h>
 #include <unistd.h>
 
-#include "cParotid.h"
+#include "cParotid.hpp"
 
 #define TEMP_SIZE 40
 
