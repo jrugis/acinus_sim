@@ -28,18 +28,18 @@ int main(int argc,char **args){
 	char temp[TEMP_SIZE];
 	gethostname(temp, TEMP_SIZE);
 	host_name = temp;
-	std::cout << "<MAIN> hostname:" << host_name<< std::endl;
+	std::cout << "<main> hostname:" << host_name<< std::endl;
 
 	// setup and run a parotid object
-	std::cout << "<MAIN> creating parotid object..." << std::endl;
+	std::cout << "<main> creating parotid object" << std::endl;
 	parotid = new cParotid;
-//	parotid->run();
+	parotid->run();
 
 	// save the results
-//	parotid->save_results();
+	parotid->save_results();
 	gettimeofday(&end, NULL);
 	duration = end.tv_sec - start.tv_sec;
-	std::cout << "<MAIN> execution time: " << duration << " sec" << std::endl;
+	std::cout << "<main> execution time: " << duration << " sec" << std::endl;
 
 	delete parotid;
 

@@ -1,7 +1,7 @@
 /*
  * cAcinus.hpp
  *
- *  Created on: 09/01/2016
+ *  Created on: 09/01/2018
  *      Author: jrugis
  */
 
@@ -17,9 +17,10 @@ class cAcinus {
 public:
 	cAcinus(int id, cParotid* parent);
 	virtual ~cAcinus();
+	int id;
+	void step();
 
 private:
-	int id;
 	cParotid* parent;
 	std::vector<cCell_x*> cells;
 };

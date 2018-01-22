@@ -11,6 +11,8 @@
 #include <string>
 #include <Eigen/Dense>
 
+class cCell_x;
+
 typedef double tCoord;
 typedef long tElement;
 
@@ -20,7 +22,7 @@ enum mesh_node_values{dist_lumen, dist_surface, MESHNCOUNT};
 
 class cCellMesh {
 public:
-	cCellMesh(std::string filename);
+	cCellMesh(std::string mesh_name);
 	virtual ~cCellMesh();
 	void print_info();
 
@@ -33,6 +35,7 @@ public:
 	Eigen::Array<bool, Eigen::Dynamic, 1> surface_node;
 
 private:
+	std::string id;
 	void get_mesh(std::string file_name);
 	void calc_dist();
 };

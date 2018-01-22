@@ -1,7 +1,7 @@
 /*
  * cParotid.hpp
  *
- *  Created on: 09/01/2016
+ *  Created on: 09/01/2018
  *      Author: jrugis
  */
 
@@ -16,8 +16,8 @@ class cParotid {
 public:
 	cParotid();
 	virtual ~cParotid();
-	//void run();
-	//void save_results();
+	void run();
+	void save_results();
 
 private:
 	std::vector<cAcinus*> acinii;

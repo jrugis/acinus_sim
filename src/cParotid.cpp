@@ -1,15 +1,21 @@
 /*
  * cParotid.cpp
  *
- *  Created on: 09/01/2016
+ *  Created on: 09/01/2018
  *      Author: jrugis
  */
+
+#include <iostream>
 
 #include "cAcinus.hpp"
 #include "cParotid.hpp"
 
 cParotid::cParotid() {
-	for(int i=0; i<1; i++) acinii.push_back(new cAcinus(i+1, this)); // only one acinus (for now)
+	int count = 1;  // only one acinus (for now)
+	for(int i=0; i<count; i++) {
+		std::cout << "<Parotid> creating acinus object " << i+1 << std::endl;
+		acinii.push_back(new cAcinus(i+1, this));
+	}
 }
 
 cParotid::~cParotid() {
@@ -17,5 +23,14 @@ cParotid::~cParotid() {
 		delete acinii.back();
 		acinii.pop_back(); 
 	}
+}
+
+void cParotid::run() {
+	for(int i=0; i<acinii.size(); i++){
+		acinii[i]->step();
+	}
+}
+
+void cParotid::save_results() {
 }
 

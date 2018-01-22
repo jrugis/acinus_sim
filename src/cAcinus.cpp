@@ -1,9 +1,11 @@
 /*
  * cAcinus.cpp
  *
- *  Created on: 09/01/2016
+ *  Created on: 09/01/2018
  *      Author: jrugis
  */
+
+#include <iostream>
 
 #include "cParotid.hpp"
 #include "cCell_x.hpp"
@@ -12,13 +14,24 @@
 cAcinus::cAcinus(int i, cParotid* p) {
 	id = i;
 	parent = p;
-	for(int i=0; i<7; i++) cells.push_back(new cCell_x(i+1, this)); // GET NUMBER OF CELLS FROM MESH FILE NAMES
+	int count = 7; // GET NUMBER OF CELLS FROM MESH FILE NAMES?
+	for(int i=0; i<count; i++) {
+		std::cout << "<Acinus> id:" << id << " creating cell object " << i+1 << std::endl;
+		cells.push_back(new cCell_x(i+1, this));
+	} 
 }
 
 cAcinus::~cAcinus() {
 	while(!cells.empty()) {
 		delete cells.back();
 		cells.pop_back(); 
+	}
+}
+
+void cAcinus::step() {
+	#pragma omp parallel for
+	for(int i=0; i<cells.size(); i++){
+		cells[i]->step();
 	}
 }
 
