@@ -25,7 +25,7 @@ CPP_FLAGS =  $(CPP_DEFS) $(CPP_INCLUDES) -m64 -O3 -march=native -mtune=native
 CPP = g++
 CPP_INCLUDES = -I/usr/include/eigen3
 
-OBJS = main.o cParotid.o cAcinus.o cCell_x.o cCellMesh.o
+OBJS = main.o cParotid.o cAcinus.o cCell_x.o cVCLSolver.o cCellMesh.o
 SRC = ../../src
 
 all: $(EXE)
@@ -40,6 +40,9 @@ cAcinus.o: $(SRC)/cAcinus.cpp $(SRC)/cAcinus.hpp
 	$(CPP) $(CPP_FLAGS) -o $@ -c $<
 
 cCell_x.o: $(SRC)/cCell_x.cpp $(SRC)/cCell_x.hpp
+	$(CPP) $(CPP_FLAGS) -o $@ -c $<
+
+cVCLSolver.o: $(SRC)/cVCLSolver.cpp $(SRC)/cVCLSolver.hpp
 	$(CPP) $(CPP_FLAGS) -o $@ -c $<
 
 cCellMesh.o: $(SRC)/cCellMesh.cpp $(SRC)/cCellMesh.hpp

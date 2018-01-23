@@ -8,6 +8,7 @@
 #ifndef CACINUS_H_
 #define CACINUS_H_
 
+#include <string>
 #include <vector>
 
 class cParotid;
@@ -17,7 +18,7 @@ class cAcinus {
 public:
 	cAcinus(int id, cParotid* parent);
 	virtual ~cAcinus();
-	int id;
+	std::string id;
 	void step();
 
 private:
