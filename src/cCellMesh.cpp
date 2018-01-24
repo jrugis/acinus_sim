@@ -15,14 +15,16 @@
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/split.hpp>
 
+#include "cCell_x.hpp"
 #include "cCellMesh.hpp"
 
-cCellMesh::cCellMesh(std::string mesh_name){
+cCellMesh::cCellMesh(std::string mesh_name, cCell_x* p){
 	// initialise member variables
 	nodes_count = 0;
 	total_elements_count = 0;
 	surface_elements_count = volume_elements_count = 0;
 
+	parent = p;
 	id = mesh_name;	
 	get_mesh(id + ".msh");
 	calc_dist();
@@ -32,7 +34,7 @@ cCellMesh::~cCellMesh(){
 }
 
 void cCellMesh::calc_dist(){
-	//std::cout << "<CellMesh> id:" + id + " calculating node distance to surface..." << std::endl;
+	parent->out << "<CellMesh> id:" + id + " calculating node distance to surface..." << std::endl;
 	Eigen::Matrix<tCoord,1,3> v1, v2;
 	for(tElement n = 0; n < nodes_count; n++){
 		if(surface_node(n)){
@@ -64,7 +66,7 @@ void cCellMesh::get_mesh(std::string file_name){
     }
 
     // get the mesh nodes
-	//std::cout << "<CellMesh> id:" + id + " getting the mesh nodes..." << std::endl;
+	parent->out << "<CellMesh> id:" + id + " getting the mesh nodes..." << std::endl;
 	while(getline(cell_file, line)){
 		if(line != "$Nodes") continue;
 		getline(cell_file, line);
@@ -81,7 +83,7 @@ void cCellMesh::get_mesh(std::string file_name){
 	surface_node.setZero();
 
 	// get the mesh elements
-	//std::cout << "<CellMesh> id:" + id + " getting the mesh elements..." << std::endl;
+	parent->out << "<CellMesh> id:" + id + " getting the mesh elements..." << std::endl;
 	while(getline(cell_file, line)){
 		if(line != "$Elements") continue;
 		getline(cell_file, line);
@@ -111,7 +113,7 @@ void cCellMesh::get_mesh(std::string file_name){
 		break;
 	}
 	// get the node data
-	//std::cout << "<CellMesh> id:" + id + " getting the mesh node data..." << std::endl;
+	parent->out << "<CellMesh> id:" + id + " getting the mesh node data..." << std::endl;
 	while(getline(cell_file, line)){
 		if(line != "\"distance to nearest lumen\"") continue;
 		else for(int i = 0; i < 6; i++) getline(cell_file, line); // skip six lines
@@ -127,8 +129,8 @@ void cCellMesh::get_mesh(std::string file_name){
 }
 
 void cCellMesh::print_info(){
-	std::cout << "<CellMesh> id:" + id + " nodes_count: " << nodes_count << std::endl;
-	std::cout << "<CellMesh> id:" + id + " total_elements_count: " << total_elements_count << std::endl;
-	std::cout << "<CellMesh> id:" + id + " surface_elements_count: " << surface_elements_count << std::endl;
-	std::cout << "<CellMesh> id:" + id + " volume_elements_count: " << volume_elements_count << std::endl;
+	parent->out << "<CellMesh> id:" + id + " nodes_count: " << nodes_count << std::endl;
+	parent->out << "<CellMesh> id:" + id + " total_elements_count: " << total_elements_count << std::endl;
+	parent->out << "<CellMesh> id:" + id + " surface_elements_count: " << surface_elements_count << std::endl;
+	parent->out << "<CellMesh> id:" + id + " volume_elements_count: " << volume_elements_count << std::endl;
 }

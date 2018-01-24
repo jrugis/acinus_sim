@@ -8,6 +8,7 @@
 #ifndef CACINUS_H_
 #define CACINUS_H_
 
+#include <fstream>
 #include <string>
 #include <vector>
 
@@ -15,14 +16,16 @@ class cParotid;
 class cCell_x;
 
 class cAcinus {
+friend class cCell_x;
 public:
 	cAcinus(int id, cParotid* parent);
 	virtual ~cAcinus();
-	std::string id;
 	void step();
 
 private:
+	std::string id;
 	cParotid* parent;
+	std::ofstream out;
 	std::vector<cCell_x*> cells;
 };
 

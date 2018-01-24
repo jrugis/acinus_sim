@@ -14,11 +14,13 @@
 #define VIENNACL_HAVE_EIGEN
 #include "viennacl/linalg/gmres.hpp"
 
-#include "cVCLSolver.hpp"
+#include "cCell_x.hpp"
 #include "cCellMesh.hpp"
+#include "cVCLSolver.hpp"
 
-cVCLSolver::cVCLSolver(SparseMatrixTCalcs &sparseA){
-	std::cout << "<VCLSolver> initialising a VCL solver..." << std::endl;
+cVCLSolver::cVCLSolver(SparseMatrixTCalcs &sparseA, cCell_x* p){
+	parent = p;
+	parent->out << "<VCLSolver> initialising a VCL solver..." << std::endl;
     
     // copy A matrix into vcl matrix
     viennacl::copy(sparseA, vcl_sparseA);
@@ -55,6 +57,6 @@ void cVCLSolver::step(MatrixX1C &solvec, MatrixX1C &rhsvec){
     viennacl::copy(vcl_sol, evec_sol);
     solvec = static_cast<MatrixX1C>(evec_sol);
     
-    std::cout << my_gmres_tag.iters() << " " << my_gmres_tag.error() << std::endl;
+    parent->out << my_gmres_tag.iters() << " " << my_gmres_tag.error() << std::endl;
 }
 

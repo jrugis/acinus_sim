@@ -49,7 +49,7 @@ cCellMesh.o: $(SRC)/cCellMesh.cpp $(SRC)/cCellMesh.hpp
 	$(CPP) $(CPP_FLAGS) -o $@ -c $<
 
 $(EXE): $(OBJS)
-	$(CPP) $(CPP_FLAGS) -o ../test/$@ $+
+	$(CPP) $(CPP_FLAGS) -o ../$@ $+
 
 clean:
 	rm *.o

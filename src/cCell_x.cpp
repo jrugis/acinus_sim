@@ -6,6 +6,7 @@
  */
 
 #include <iostream>
+#include <fstream>
 #include <string>
 #include <iomanip>
 #include <fstream>
@@ -23,22 +24,24 @@
 cCell_x::cCell_x(int i, cAcinus* p) {
 	parent = p;
 	id = parent->id + "c" + std::to_string(i);
+	out.open(id + ".out");
 
-	mesh = new cCellMesh(id);
+	mesh = new cCellMesh(id, this);
 	mesh->print_info();
 	get_parameters();
 	make_matrices();  // create the constant matrices
 	init_u();
-	std::cout << "<Cell_x> id:" << id << " creating a solver object..." << std::endl;
-    solver = new cVCLSolver(sparseA);
+	out << "<Cell_x> id:" << id << " creating a solver object..." << std::endl;
+    solver = new cVCLSolver(sparseA, this);
 }
 
 cCell_x::~cCell_x() {
+	out.close();
 	delete mesh;
 }
 
 void cCell_x::init_u(){
-	std::cout << "<Cell_x> id:" << id << " initialising the solution matrix..." << std::endl;
+	out << "<Cell_x> id:" << id << " initialising the solution matrix..." << std::endl;
 	tElement np = mesh->nodes_count;
 	u.resize(VARIABLES * np, numt); // NOTE: the variables ordering is c, ip, h, ce
 	u.block(0, 0, np, 1) = MatrixXXC().Constant(np, 1, p[c0]);
@@ -80,7 +83,7 @@ void cCell_x::make_matrices(){
 	tElement np = mesh->nodes_count;
 
 	node_data.resize(np, Eigen::NoChange);
-	std::cout << "<Cell_x> id:" << id << " calculating the spatial factors..." << std::endl;
+	out << "<Cell_x> id:" << id << " calculating the spatial factors..." << std::endl;
 	for(tElement n = 0; n < (np); n++){ // for each node...
 		tCalcs d = mesh->node_data(n, dist_lumen);
 		if(d <= p[IPRdn]) node_data(n, IPR_n) =  1.0; // linear gradient between d1 and d2
@@ -95,7 +98,7 @@ void cCell_x::make_matrices(){
 	ref_mass = make_ref_mass();
 
 	// make the mass and stiffness matrices
-	std::cout << "<Cell_x> id:" << id << " calculating the constant matrices..." << std::endl;
+	out << "<Cell_x> id:" << id << " calculating the constant matrices..." << std::endl;
 	MatrixXXC stiffc, stiffp, small_mass;
 	MatrixXXC stiffce;
 	stiffc = stiffc.Zero(np, np);
@@ -243,7 +246,7 @@ void cCell_x::make_matrices(){
 }
 
 void cCell_x::fatal_error(std::string msg){
-	std::cout << "<Cell_x> id:" << id << " ERROR: " << msg << std::endl;
+	out << "<Cell_x> id:" << id << " ERROR: " << msg << std::endl;
 	exit(0);
 }
 
@@ -344,7 +347,7 @@ void cCell_x::get_parameters(){
         fatal_error("the model parameters file " + file_name + " could not be opened");
     }
 
-	std::cout << "<Cell_x> id:" << id << " reading model parameters..." << std::endl;
+	out << "<Cell_x> id:" << id << " reading model parameters..." << std::endl;
 	int n = 0;   // read in the model parameters
     while(getline(model_file, line)){
 		if(line.data()[0] == '%') continue;
@@ -367,7 +370,7 @@ void cCell_x::save_matrix_reduce(std::string file_name, MatrixXXC mat){
     int max_index, min_index;
     max_per_row.maxCoeff(&max_index);
     max_per_row.minCoeff(&min_index);
-    std::cout << "<Cell_x> id:" << id << " Reducing results in " << file_name << ": " << max_index << " and " << min_index << std::endl;
+    out << "<Cell_x> id:" << id << " Reducing results in " << file_name << ": " << max_index << " and " << min_index << std::endl;
     
     // write data
     std::ofstream file(file_name.c_str(), std::ios::binary); // create the file
@@ -424,19 +427,19 @@ void cCell_x::save_results(){
 void cCell_x::step() {
 	#pragma omp critical(print)
 	{
-		std::cout << "<Cell_x> id:" << id << " step" << std::endl;
+		out << "<Cell_x> id:" << id << " step" << std::endl;
 	}
 }
 
 /*
-	std::cout << "<MODEL> running the model..." << std::endl;
+	out << "<MODEL> running the model..." << std::endl;
 	MatrixX1C solvec, rhsvec; // the solution and right-hand side vectors
 	solvec.resize(VARIABLES * mesh->nodes_count, Eigen::NoChange);
 	rhsvec.resize(VARIABLES * mesh->nodes_count, Eigen::NoChange);
 	solvec = u.col(0);
 	tCalcs plc = p[VPLC];
 	for(long i = 1; i < numt; i++){
-		std::cout << std::fixed << std::setprecision(3) << i * p[delt] << " ";
+		out << std::fixed << std::setprecision(3) << i * p[delt] << " ";
 		p[VPLC] = ((i < plc_st) or (i > plc_ft)) ? 0.0 : plc;
 		rhsvec = (sparseMass * solvec) + (p[delt] * make_load(i - 1));
 		//*********************************************************

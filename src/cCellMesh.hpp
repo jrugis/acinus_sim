@@ -22,7 +22,7 @@ enum mesh_node_values{dist_lumen, dist_surface, MESHNCOUNT};
 
 class cCellMesh {
 public:
-	cCellMesh(std::string mesh_name);
+	cCellMesh(std::string mesh_name, cCell_x* parent);
 	virtual ~cCellMesh();
 	void print_info();
 
@@ -36,6 +36,7 @@ public:
 
 private:
 	std::string id;
+	cCell_x* parent;
 	void get_mesh(std::string file_name);
 	void calc_dist();
 };

@@ -8,6 +8,7 @@
 #ifndef CCELL_X_H_
 #define CCELL_X_H_
 
+#include <fstream>
 #include <string>
 #include <Eigen/Dense>
 #include <Eigen/Sparse>
@@ -44,18 +45,18 @@ typedef Eigen::Array<tCalcs, REF_MASS_SIZE, REF_MASS_SIZE> ArrayRefMass;
 typedef Eigen::Triplet<tCalcs> Triplet;
 
 class cCell_x {
+friend class cCellMesh;
+friend class cVCLSolver;
 public:
 	cCell_x(int id, cAcinus *parent);
 	virtual ~cCell_x();
-
-	MatrixXXC u; // solution matrix
-	SparseMatrixTCalcs sparseA, sparseMass; // A and mass matrices
 
 	void step();
 	void save_results();
 
 private:
 	std::string id;
+	std::ofstream out;
 	cAcinus* parent;
 	cCellMesh* mesh;
     cVCLSolver *solver;
@@ -64,6 +65,9 @@ private:
 	long numt, plc_st, plc_ft; // number of time steps, PLC start and finish time steps
 	Eigen::Array<tCalcs, Eigen::Dynamic, MODELNCOUNT> node_data;
 	Eigen::Array<tCalcs, Eigen::Dynamic, MODELECOUNT> element_data;
+
+	MatrixXXC u; // solution matrix
+	SparseMatrixTCalcs sparseA, sparseMass; // A and mass matrices
 
 	void fatal_error(std::string msg);
 	void get_parameters();

@@ -13,16 +13,20 @@
 #include "cAcinus.hpp"
 
 cAcinus::cAcinus(int i, cParotid* p) {
-	id = "a" + std::to_string(i);
 	parent = p;
+	id = "a" + std::to_string(i);
+	out.open(id + ".out");
+
 	int count = 7; // GET NUMBER OF CELLS FROM MESH FILE NAMES?
+	out << "<Acinus> id:" << id << " creating " << count << " cell objects " << std::endl;
+	#pragma omp parallel for
 	for(int i=0; i<count; i++) {
-		std::cout << "<Acinus> id:" << id << " creating cell object " << i+1 << std::endl;
 		cells.push_back(new cCell_x(i+1, this));
 	} 
 }
 
 cAcinus::~cAcinus() {
+	out.close();
 	while(!cells.empty()) {
 		delete cells.back();
 		cells.pop_back(); 
