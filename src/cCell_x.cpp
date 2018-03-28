@@ -46,15 +46,13 @@ void cCell_x::init_u(){
 	u.resize(VARIABLES * np, numt); // NOTE: the variables ordering is c, ip, h, ce
 	u.block(0, 0, np, 1) = MatrixXXC().Constant(np, 1, p[c0]);
 	u.block(np, 0, np, 1) = MatrixXXC().Constant(np, 1, p[ip0]);
-	u.block(2 * np, 0, np, 1) = MatrixXXC().Constant(np, 1, p[h0]);
-	u.block(3 * np, 0, np, 1) = MatrixXXC().Constant(np, 1, p[ce0]);
+	u.block(2 * np, 0, np, 1) = MatrixXXC().Constant(np, 1, p[ce0]);
 }
 
-Array1VC cCell_x::getbodyreactions(tCalcs c, tCalcs ip, tCalcs h, tCalcs ce, tCalcs ipr_f, tCalcs plc_f){
+Array1VC cCell_x::getbodyreactions(tCalcs c, tCalcs ip, tCalcs ce, tCalcs ipr_f, tCalcs plc_f){
 	tCalcs phi_c = pow(c, 3) / (pow(p[Kc], 3) + pow(c, 3));
 	tCalcs phi_p = pow(ip, 4) / (pow(p[Kp], 4) + pow(ip, 4));
 	tCalcs PO = phi_c * phi_p * h;
-	tCalcs hinf = pow(p[Ki], 2) / (pow(p[Ki], 2) + pow(c, 2));
 	tCalcs P_RyR = pow(c, 2) / (pow(p[KRyR], 2) + pow(c, 2));
 
 	tCalcs JIPR = ipr_f * p[kIPR] * PO;
@@ -63,8 +61,7 @@ Array1VC cCell_x::getbodyreactions(tCalcs c, tCalcs ip, tCalcs h, tCalcs ce, tCa
 	Array1VC reactions;
 	reactions(0) = erc;
 	reactions(1) = (plc_f * p[VPLC]) - (p[Vdeg] * ip * pow(c, 2) / (pow(p[K3K], 2) + pow(c, 2)));
-	reactions(2) = (hinf - h) / p[tau];
-	reactions(3) = -1.0 * erc / p[gama];
+	reactions(2) = -1.0 * erc / p[gama];
 	return reactions;
 }
 
@@ -180,11 +177,10 @@ void cCell_x::make_matrices(){
     
     // construct list of triplets
     int np2 = np * 2;
-    int np3 = np * 3;
     for (int j = 0; j < np; j++) {
         for (int i = 0; i < np; i++) {
             double v_ij = small_mass(i, j);
-            // add non zeros in first, second and fourth (if required) blocks
+            // add non zeros in first, second and third blocks
             if (v_ij != 0) {
                 // mass.block(0, 0, np, np) = small_mass;
                 triplet_list.push_back(Triplet(i, j, v_ij));
@@ -192,13 +188,8 @@ void cCell_x::make_matrices(){
                 // mass.block(np, np, np, np) = small_mass;
                 triplet_list.push_back(Triplet(np + i, np + j, v_ij));
                 
-                // mass.block(3*np, 3*np, np, np) = small_mass;
-                triplet_list.push_back(Triplet(np3 + i, np3 + j, v_ij));
-            }
-            
-            if (i == j) {
-                // set identity in third block
-                triplet_list.push_back(Triplet(np2 + i, np2 + j, 1.0));
+                // mass.block(2*np, 2*np, np, np) = small_mass;
+                triplet_list.push_back(Triplet(np2 + i, np2 + j, v_ij));
             }
         }
     }
@@ -227,11 +218,11 @@ void cCell_x::make_matrices(){
                 triplet_list.push_back(Triplet(np + i, np + j, v_stiffp));
             }
             
-            // fourth block
-            // stiff.block(3*np, 3*np, np, np) = stiffce;
+            // third block
+            // stiff.block(2*np, 2*np, np, np) = stiffce;
             double v_stiffce = stiffce(i, j);
             if (v_stiffce != 0) {
-                triplet_list.push_back(Triplet(np3 + i, np3 + j, v_stiffce));
+                triplet_list.push_back(Triplet(np2 + i, np2 + j, v_stiffce));
             }
         }
     }
@@ -267,13 +258,12 @@ MatrixX1C cCell_x::make_load(long i){
 
 	c = u.block(0, i, np, 1);
 	ip = u.block(np, i, np, 1);
-	h = u.block(2 * np, i, np, 1);
-	ce = u.block(3 * np, i, np, 1);
+	ce = u.block(2 * np, i, np, 1);
 
 	load_c = load_c.Zero(np, 1);
 	load_ip = load_ip.Zero(np, 1);
-	load.resize(VARIABLES * np, Eigen::NoChange);
 	load_ce = load_ce.Zero(np, 1);
+	load.resize(VARIABLES * np, Eigen::NoChange);
 
 	// reaction terms
 	for(tElement n = 0; n < (mesh->volume_elements_count); n++){ // for each volume element...
@@ -286,18 +276,15 @@ MatrixX1C cCell_x::make_load(long i){
 
 		tCalcs cav  = 0.25 * (c(vi(0))  + c(vi(1))  + c(vi(2))  + c(vi(3)));
 		tCalcs ipav = 0.25 * (ip(vi(0)) + ip(vi(1)) + ip(vi(2)) + ip(vi(3)));
-		tCalcs hav  = 0.25 * (h(vi(0)) + h(vi(1)) + h(vi(2)) + h(vi(3)));
 		tCalcs ceav = 0.25 * (ce(vi(0)) + ce(vi(1)) + ce(vi(2)) + ce(vi(3)));
 
-		Array1VC reactions = getbodyreactions(cav, ipav, hav, ceav,
+		Array1VC reactions = getbodyreactions(cav, ipav, ceav,
 				tCalcs(element_data(n, IPR_e)), tCalcs(element_data(n, PLC_e)));
 
 		for(int i = 0; i < 4; i++){ // for each tetrahedron vertex
 			load_c(vi(i)) += element_data(n, VOL_e) * 0.25 * reactions(0); // reaction terms, scaled by one-quarter volume
 			load_ip(vi(i)) += element_data(n, VOL_e) * 0.25 * reactions(1);
-			#ifdef FOUR_VARIABLES
 			load_ce(vi(i)) += element_data(n, VOL_e) * 0.25 * reactions(3);
-			#endif
 		}
 	}
 

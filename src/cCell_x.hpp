@@ -19,18 +19,22 @@ class cVCLSolver;
 
 #include "cVCLSolver.hpp"
 
-#define VARIABLES 4 // the number of model variables
+#define VARIABLES 3 // the number of diffusing model variables
 #define REF_MASS_SIZE 4   // reference mass dimension
 
 // the 3D model parameters
-enum model_parameters{delt, tend, reduce, \
+enum model_parameters{ \
+	delt, tend, reduce, \
 	PLCsrt, PLCfin, \
-	IPRdn, IPRdf, IPRmin, PLCds, PLCdl, \
+	IPRdn, IPRdf, IPRmin, \
+	PLCds, PLCdl, \
 	c0, ip0, h0, ce0, gama, \
-	kIPR, Kc, Kp, Ki, tau, Dc, Dce, \
-	kRyR, KRyR, \
-	VS, KS, kleak, \
-	VPLC, Vdeg, K3K, Dp, \
+	Dc, Dp, De, Fc, Fip, \
+	V_RyR, K_RyR, K_RyR2, d_RyR, \
+	k_beta, K_p, K_c, K_h, kIPR, kIPR_min, \
+	V_p, k_p, K_bar, \
+	V_3K, V_5K, K_PLC, K3K, VPLC, \
+	K_hRyR, tau, \
 	PCOUNT};
 
 enum model_node_values{IPR_n, PLC_n, MODELNCOUNT};            // node spatial factors
@@ -75,7 +79,7 @@ private:
 	void make_matrices();
 	MatrixX1C make_load(long i);
 	ArrayRefMass make_ref_mass();
-	Array1VC getbodyreactions(tCalcs c, tCalcs ip, tCalcs h, tCalcs ce, tCalcs ipr_f, tCalcs plc_f);
+	Array1VC getbodyreactions(tCalcs c, tCalcs ip, tCalcs ce, tCalcs ipr_f, tCalcs plc_f);
 	tCalcs getboundaryflux(tCalcs c);
 	void save_matrix(std::string file_name, MatrixXXC mat);
     void save_matrix_reduce(std::string file_name, MatrixXXC mat);
