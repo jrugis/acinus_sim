@@ -12,7 +12,6 @@
 
 cParotid::cParotid() {
 	int count = 1;  // only one acinus (for now)
-	//#pragma omp parallel for
 	for(int i=0; i<count; i++) {
 		std::cout << "<Parotid> creating acinus object " << i+1 << std::endl;
 		acinii.push_back(new cAcinus(i+1, this));

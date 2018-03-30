@@ -33,10 +33,10 @@ int main(int argc,char **args){
 	// setup and run a parotid object
 	std::cout << "<main> creating parotid object" << std::endl;
 	parotid = new cParotid;
-	parotid->run();
+	//parotid->run();
 
 	// save the results
-	parotid->save_results();
+	//parotid->save_results();
 	gettimeofday(&end, NULL);
 	duration = end.tv_sec - start.tv_sec;
 	std::cout << "<main> execution time: " << duration << " sec" << std::endl;

@@ -19,7 +19,6 @@ cAcinus::cAcinus(int i, cParotid* p) {
 
 	int count = 7; // GET NUMBER OF CELLS FROM MESH FILE NAMES?
 	out << "<Acinus> id:" << id << " creating " << count << " cell objects " << std::endl;
-	#pragma omp parallel for
 	for(int i=0; i<count; i++) {
 		cells.push_back(new cCell_x(i+1, this));
 	} 

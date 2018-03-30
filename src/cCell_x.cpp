@@ -28,11 +28,12 @@ cCell_x::cCell_x(int i, cAcinus* p) {
 
 	mesh = new cCellMesh(id, this);
 	mesh->print_info();
-	get_parameters();
-	make_matrices();  // create the constant matrices
-	init_u();
-	out << "<Cell_x> id:" << id << " creating a solver object..." << std::endl;
-    solver = new cVCLSolver(sparseA, this);
+
+	//get_parameters();
+	//make_matrices();  // create the constant matrices
+	//init_u();
+	//out << "<Cell_x> id:" << id << " creating a solver object..." << std::endl;
+    //solver = new cVCLSolver(sparseA, this);
 }
 
 cCell_x::~cCell_x() {
@@ -42,42 +43,42 @@ cCell_x::~cCell_x() {
 
 void cCell_x::init_u(){
 	out << "<Cell_x> id:" << id << " initialising the solution matrix..." << std::endl;
-	tElement np = mesh->nodes_count;
-	u.resize(VARIABLES * np, numt); // NOTE: the variables ordering is c, ip, h, ce
-	u.block(0, 0, np, 1) = MatrixXXC().Constant(np, 1, p[c0]);
-	u.block(np, 0, np, 1) = MatrixXXC().Constant(np, 1, p[ip0]);
-	u.block(2 * np, 0, np, 1) = MatrixXXC().Constant(np, 1, p[ce0]);
+//	tElement np = mesh->nodes_count;
+//	u.resize(VARIABLES * np, numt); // NOTE: the variables ordering is c, ip, h, ce
+//	u.block(0, 0, np, 1) = MatrixXXC().Constant(np, 1, p[c0]);
+//	u.block(np, 0, np, 1) = MatrixXXC().Constant(np, 1, p[ip0]);
+//	u.block(2 * np, 0, np, 1) = MatrixXXC().Constant(np, 1, p[ce0]);
 }
 
 Array1VC cCell_x::getbodyreactions(tCalcs c, tCalcs ip, tCalcs ce, tCalcs ipr_f, tCalcs plc_f){
-	tCalcs phi_c = pow(c, 3) / (pow(p[Kc], 3) + pow(c, 3));
-	tCalcs phi_p = pow(ip, 4) / (pow(p[Kp], 4) + pow(ip, 4));
-	tCalcs PO = phi_c * phi_p * h;
-	tCalcs P_RyR = pow(c, 2) / (pow(p[KRyR], 2) + pow(c, 2));
+//	tCalcs phi_c = pow(c, 3) / (pow(p[Kc], 3) + pow(c, 3));
+//	tCalcs phi_p = pow(ip, 4) / (pow(p[Kp], 4) + pow(ip, 4));
+//	tCalcs PO = phi_c * phi_p * h;
+//	tCalcs P_RyR = pow(c, 2) / (pow(p[KRyR], 2) + pow(c, 2));
 
-	tCalcs JIPR = ipr_f * p[kIPR] * PO;
-	tCalcs JS = p[VS] * pow(c, 2) / (pow(p[KS], 2) + pow(c, 2));
-	tCalcs erc = (JIPR + p[kleak] + p[kRyR] * P_RyR) * (ce - c) - JS; // calcium from ER
+//	tCalcs JIPR = ipr_f * p[kIPR] * PO;
+//	tCalcs JS = p[VS] * pow(c, 2) / (pow(p[KS], 2) + pow(c, 2));
+//	tCalcs erc = (JIPR + p[kleak] + p[kRyR] * P_RyR) * (ce - c) - JS; // calcium from ER
 	Array1VC reactions;
-	reactions(0) = erc;
-	reactions(1) = (plc_f * p[VPLC]) - (p[Vdeg] * ip * pow(c, 2) / (pow(p[K3K], 2) + pow(c, 2)));
-	reactions(2) = -1.0 * erc / p[gama];
+//	reactions(0) = erc;
+//	reactions(1) = (plc_f * p[VPLC]) - (p[Vdeg] * ip * pow(c, 2) / (pow(p[K3K], 2) + pow(c, 2)));
+//	reactions(2) = -1.0 * erc / p[gama];
 	return reactions;
 }
 
 ArrayRefMass cCell_x::make_ref_mass(){
 	ArrayRefMass ref_mass;
-	tCalcs v = (1.0 / 6.0) * 0.25 * 0.25;
-	for(int i = 0; i < REF_MASS_SIZE; i++){
-		for(int j = 0; j < REF_MASS_SIZE; j++){
-			ref_mass(i, j) = v;
-		}
-	}
+//	tCalcs v = (1.0 / 6.0) * 0.25 * 0.25;
+//	for(int i = 0; i < REF_MASS_SIZE; i++){
+//		for(int j = 0; j < REF_MASS_SIZE; j++){
+//			ref_mass(i, j) = v;
+//		}
+//	}
 	return ref_mass;
 }
 
 void cCell_x::make_matrices(){
-	tElement np = mesh->nodes_count;
+/*	tElement np = mesh->nodes_count;
 
 	node_data.resize(np, Eigen::NoChange);
 	out << "<Cell_x> id:" << id << " calculating the spatial factors..." << std::endl;
@@ -234,6 +235,7 @@ void cCell_x::make_matrices(){
     // make the A matrix
     sparseA.resize(VARIABLES * np, VARIABLES * np);
     sparseA = sparseMass + (p[delt] * sparseStiff);
+*/
 }
 
 void cCell_x::fatal_error(std::string msg){
@@ -249,13 +251,13 @@ tCalcs cCell_x::getboundaryflux(tCalcs c){
 }
 
 MatrixX1C cCell_x::make_load(long i){
-	tElement np = mesh->nodes_count;
-	ArrayX1C c, ip, h;
-	ArrayX1C load_c, load_ip;
-	ArrayX1C ce;
-	ArrayX1C load_ce;
+//	tElement np = mesh->nodes_count;
+//	ArrayX1C c, ip, h;
+//	ArrayX1C load_c, load_ip;
+//	ArrayX1C ce;
+//	ArrayX1C load_ce;
 	MatrixX1C load;
-
+/*
 	c = u.block(0, i, np, 1);
 	ip = u.block(np, i, np, 1);
 	ce = u.block(2 * np, i, np, 1);
@@ -320,36 +322,38 @@ MatrixX1C cCell_x::make_load(long i){
 		load((2 * np) + n) = reactions(2); // h
 	}
 	//save_matrix(id + "load.txt", load);
+*/
 	return load;
 }
 
 void cCell_x::get_parameters(){
-	std::string file_name = parent->id + ".dat";
-	std::ifstream model_file(file_name); // open the model parameters file
-	std::string line;                    // file line buffer
-    std::vector <std::string> tokens;    // tokenized line
+//	std::string file_name = parent->id + ".dat";
+//	std::ifstream model_file(file_name); // open the model parameters file
+//	std::string line;                    // file line buffer
+//  std::vector <std::string> tokens;    // tokenized line
 
     // check the file is open
-    if (not model_file.is_open()) {
-        fatal_error("the model parameters file " + file_name + " could not be opened");
-    }
+//    if (not model_file.is_open()) {
+//       fatal_error("the model parameters file " + file_name + " could not be opened");
+//    }
 
-	out << "<Cell_x> id:" << id << " reading model parameters..." << std::endl;
-	int n = 0;   // read in the model parameters
-    while(getline(model_file, line)){
-		if(line.data()[0] == '%') continue;
-		boost::split(tokens, line, boost::is_any_of(", "), boost::token_compress_on);
-		if((n + tokens.size()) > PCOUNT) fatal_error("too many parameters in the model parameters file");
-		for(unsigned int m = 0; m < tokens.size(); m++) p[n++] = atof(tokens[m].c_str());
-    }
-	model_file.close();
-	if(n != PCOUNT) fatal_error("too few parameters in the model parameters file");
-	numt = p[tend] / p[delt];
-	plc_st = p[PLCsrt] / p[delt];
-	plc_ft = p[PLCfin] / p[delt];
+//	out << "<Cell_x> id:" << id << " reading model parameters..." << std::endl;
+//	int n = 0;   // read in the model parameters
+//  while(getline(model_file, line)){
+//		if(line.data()[0] == '%') continue;
+//		boost::split(tokens, line, boost::is_any_of(", "), boost::token_compress_on);
+//		if((n + tokens.size()) > PCOUNT) fatal_error("too many parameters in the model parameters file");
+//		for(unsigned int m = 0; m < tokens.size(); m++) p[n++] = atof(tokens[m].c_str());
+//    }
+//	model_file.close();
+//	if(n != PCOUNT) fatal_error("too few parameters in the model parameters file");
+//	numt = p[tend] / p[delt];
+//	plc_st = p[PLCsrt] / p[delt];
+//	plc_ft = p[PLCfin] / p[delt];
 }
 
 void cCell_x::save_matrix_reduce(std::string file_name, MatrixXXC mat){
+/*
     // peak value for each row
     MatrixX1C max_per_row = mat.rowwise().maxCoeff();
     
@@ -374,10 +378,11 @@ void cCell_x::save_matrix_reduce(std::string file_name, MatrixXXC mat){
         file.write(reinterpret_cast<char*>(&f), esize); // column order
     }
     file.close();
+*/
 }
 
 void cCell_x::save_matrix(std::string file_name, MatrixXXC mat){
-	std::ofstream file(file_name.c_str(), std::ios::binary); // create the file
+/*	std::ofstream file(file_name.c_str(), std::ios::binary); // create the file
 	tElement rows = mat.rows();
 	tElement cols = mat.cols();
 	float f;
@@ -391,9 +396,11 @@ void cCell_x::save_matrix(std::string file_name, MatrixXXC mat){
 		}
 	}
 	file.close();
+*/
 }
 
 void cCell_x::save_results(){
+/*
 	tElement np = mesh->nodes_count;
     
     // reduce first or output full results
@@ -408,6 +415,7 @@ void cCell_x::save_results(){
     
 	//save_matrix(id + "_d.bin", MatrixXXC(u.block(2 * np, 0, np, numt)));  // d
 	//save_matrix(id + "_ce.bin", MatrixXXC(u.block(3 * np, 0, np, numt)));  // ce
+*/
 }
 
 

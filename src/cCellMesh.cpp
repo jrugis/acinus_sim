@@ -1,7 +1,7 @@
 /*
  * cCellMesh.cpp
  *
- *  Created on: 09/01/2018
+ *  Created on: 30/03/2018
  *      Author: jrugis
  */
 
@@ -20,44 +20,48 @@
 
 cCellMesh::cCellMesh(std::string mesh_name, cCell_x* p){
 	// initialise member variables
-	nodes_count = 0;
-	total_elements_count = 0;
-	surface_elements_count = volume_elements_count = 0;
-
+	//nodes_count = 0;
+	//total_elements_count = 0;
+	//surface_elements_count = volume_elements_count = 0;
+	vertices_count = tetrahedrons_count = 0;
+	surface_triangles_count = apical_triangles_count = basal_triangles_count = 0;
 	parent = p;
 	id = mesh_name;	
-	get_mesh(id + ".msh");
-	calc_dist();
+	//get_mesh(id + ".msh");
+	get_mesh(id + ".bin");
+	//calc_dist();
 }
 
 cCellMesh::~cCellMesh(){
 }
 
-void cCellMesh::calc_dist(){
-	parent->out << "<CellMesh> id:" + id + " calculating node distance to surface..." << std::endl;
-	Eigen::Matrix<tCoord,1,3> v1, v2;
-	for(tElement n = 0; n < nodes_count; n++){
-		if(surface_node(n)){
-			node_data(n, dist_surface) = 0.0;
-			continue;
-		}
-		v1 = coordinates.block<1,3>(n, 0);
-		node_data(n, dist_surface) = std::numeric_limits<tCalcs>::max();
-		for(tElement s = 1; s < nodes_count; s++){
-			if(!surface_node(s)) continue;
-			v2 = coordinates.block<1,3>(s, 0);
-			tCalcs d = (v1 - v2).squaredNorm();
-			if(d < node_data(n, dist_surface)) node_data(n, dist_surface) = d;
-		}
-		node_data(n, dist_surface) = std::sqrt(tCalcs(node_data(n, dist_surface)));
-	}
-}
+//void cCellMesh::calc_dist(){
+//	parent->out << "<CellMesh> id:" + id + " calculating node distance to surface..." << std::endl;
+//	Eigen::Matrix<tCoord,1,3> v1, v2;
+//	for(tElement n = 0; n < nodes_count; n++){
+//		if(surface_node(n)){
+//			node_data(n, dist_surface) = 0.0;
+//			continue;
+//		}
+//		v1 = coordinates.block<1,3>(n, 0);
+//		node_data(n, dist_surface) = std::numeric_limits<tCalcs>::max();
+//		for(tElement s = 1; s < nodes_count; s++){
+//			if(!surface_node(s)) continue;
+//			v2 = coordinates.block<1,3>(s, 0);
+//			tCalcs d = (v1 - v2).squaredNorm();
+//			if(d < node_data(n, dist_surface)) node_data(n, dist_surface) = d;
+//		}
+//		node_data(n, dist_surface) = std::sqrt(tCalcs(node_data(n, dist_surface)));
+//	}
+//}
 
 void cCellMesh::get_mesh(std::string file_name){
     // local variables
-	std::ifstream cell_file(file_name.c_str()); // open the mesh file
-	std::string line;                           // file line buffer
-    std::vector <std::string> tokens;           // tokenized line
+	std::ifstream cell_file(file_name.c_str(), std::ios::in | std::ios::binary); // open the mesh file
+	uint32_t i32;
+
+	//std::string line;                           // file line buffer
+    //std::vector <std::string> tokens;           // tokenized line
 
     // check the file is open
     if (not cell_file.is_open()) {
@@ -65,7 +69,7 @@ void cCellMesh::get_mesh(std::string file_name){
         exit(1);
     }
 
-    // get the mesh nodes
+/*    // get the mesh nodes
 	parent->out << "<CellMesh> id:" + id + " getting the mesh nodes..." << std::endl;
 	while(getline(cell_file, line)){
 		if(line != "$Nodes") continue;
@@ -81,8 +85,14 @@ void cCellMesh::get_mesh(std::string file_name){
 	}
 	surface_node.resize(nodes_count, Eigen::NoChange);
 	surface_node.setZero();
+*/
+	// get the mesh vertices
+	cell_file.read(reinterpret_cast<char *>(&i32), sizeof(i32));
+	vertices_count = i32;
 
-	// get the mesh elements
+
+
+/*	// get the mesh elements
 	parent->out << "<CellMesh> id:" + id + " getting the mesh elements..." << std::endl;
 	while(getline(cell_file, line)){
 		if(line != "$Elements") continue;
@@ -112,7 +122,8 @@ void cCellMesh::get_mesh(std::string file_name){
 		volume_elements.conservativeResize(volume_elements_count, Eigen::NoChange);    //
 		break;
 	}
-	// get the node data
+*/
+/*	// get the node data
 	parent->out << "<CellMesh> id:" + id + " getting the mesh node data..." << std::endl;
 	while(getline(cell_file, line)){
 		if(line != "\"distance to nearest lumen\"") continue;
@@ -125,12 +136,14 @@ void cCellMesh::get_mesh(std::string file_name){
 		}
 		break;
 	}
+*/
 	cell_file.close();
 }
 
 void cCellMesh::print_info(){
-	parent->out << "<CellMesh> id:" + id + " nodes_count: " << nodes_count << std::endl;
-	parent->out << "<CellMesh> id:" + id + " total_elements_count: " << total_elements_count << std::endl;
-	parent->out << "<CellMesh> id:" + id + " surface_elements_count: " << surface_elements_count << std::endl;
-	parent->out << "<CellMesh> id:" + id + " volume_elements_count: " << volume_elements_count << std::endl;
+	parent->out << "<CellMesh> id:" + id + " vertices_count: " << vertices_count << std::endl;
+	parent->out << "<CellMesh> id:" + id + " tetrahedrons_count: " << tetrahedrons_count << std::endl;
+	parent->out << "<CellMesh> id:" + id + " surface_triangles_count: " << surface_triangles_count << std::endl;
+	parent->out << "<CellMesh> id:" + id + " apical_triangles_count: " << apical_triangles_count << std::endl;
+	parent->out << "<CellMesh> id:" + id + " basal_triangles_count: " << basal_triangles_count << std::endl;
 }
