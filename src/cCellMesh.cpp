@@ -11,23 +11,17 @@
 #include <vector>
 #include <limits>
 #include <cmath>
-#include <boost/tokenizer.hpp>
-#include <boost/algorithm/string/classification.hpp>
-#include <boost/algorithm/string/split.hpp>
 
 #include "cCell_x.hpp"
 #include "cCellMesh.hpp"
 
 cCellMesh::cCellMesh(std::string mesh_name, cCell_x* p){
 	// initialise member variables
-	//nodes_count = 0;
-	//total_elements_count = 0;
-	//surface_elements_count = volume_elements_count = 0;
 	vertices_count = tetrahedrons_count = 0;
 	surface_triangles_count = apical_triangles_count = basal_triangles_count = 0;
+	common_triangles_count = 0;
 	parent = p;
 	id = mesh_name;	
-	//get_mesh(id + ".msh");
 	get_mesh(id + ".bin");
 	//calc_dist();
 }
@@ -59,84 +53,78 @@ void cCellMesh::get_mesh(std::string file_name){
     // local variables
 	std::ifstream cell_file(file_name.c_str(), std::ios::in | std::ios::binary); // open the mesh file
 	uint32_t i32;
-
-	//std::string line;                           // file line buffer
-    //std::vector <std::string> tokens;           // tokenized line
+	float f32;
 
     // check the file is open
     if (not cell_file.is_open()) {
         std::cerr << "<CellMesh> ERROR: the mesh file could not be opened (" << file_name << ")" << std::endl;
         exit(1);
     }
-
-/*    // get the mesh nodes
-	parent->out << "<CellMesh> id:" + id + " getting the mesh nodes..." << std::endl;
-	while(getline(cell_file, line)){
-		if(line != "$Nodes") continue;
-		getline(cell_file, line);
-		nodes_count = std::atof(line.c_str());
-		coordinates.resize(nodes_count, Eigen::NoChange);
-		for(tElement n = 0; n < nodes_count; n++){
-			getline(cell_file, line);
-			boost::split(tokens, line, boost::is_any_of(", "), boost::token_compress_on);
-			for(int m = 0; m < 3; m++) coordinates(n, m) = atof(tokens[m + 1].c_str());
-		}
-		break;
-	}
-	surface_node.resize(nodes_count, Eigen::NoChange);
-	surface_node.setZero();
-*/
-	// get the mesh vertices
+	// get the mesh vertices (int32 count, 3x-float32 vertices) 
 	cell_file.read(reinterpret_cast<char *>(&i32), sizeof(i32));
 	vertices_count = i32;
-
-
-
-/*	// get the mesh elements
-	parent->out << "<CellMesh> id:" + id + " getting the mesh elements..." << std::endl;
-	while(getline(cell_file, line)){
-		if(line != "$Elements") continue;
-		getline(cell_file, line);
-		total_elements_count = std::atof(line.c_str());
-		surface_elements.resize(total_elements_count, Eigen::NoChange);   // overkill for now
-		volume_elements.resize(total_elements_count, Eigen::NoChange);    //
-		for(tElement n = 0; n < total_elements_count; n++){
-			getline(cell_file, line);
-			boost::split(tokens, line, boost::is_any_of(", "), boost::token_compress_on);
-			int element_type = atoi(tokens[1].c_str());
-			if(element_type == 2){  // surface triangles
-				for(int m = 0; m < 3; m++){                                         // index from zero
-					tElement i = atol(tokens[m + 5].c_str()) - 1;
-					surface_elements(surface_elements_count, m) = i;
-					surface_node(i) = true;
-				}
-				surface_elements_count++;
-			}
-			if(element_type == 4){  // volume tetrahedrons
-				for(int m = 0; m < 4; m++)                                          // index from zero
-					volume_elements(volume_elements_count, m) = atol(tokens[m + 5].c_str()) - 1;
-				volume_elements_count++;
-			}
+	vertices.resize(vertices_count, Eigen::NoChange);
+	for(int n=0; n<vertices_count; n++){
+		for(int m=0; m<3; m++){
+			cell_file.read(reinterpret_cast<char *>(&f32), sizeof(f32));
+			vertices(n,m) = f32;
 		}
-		surface_elements.conservativeResize(surface_elements_count, Eigen::NoChange);  // correct the size
-		volume_elements.conservativeResize(volume_elements_count, Eigen::NoChange);    //
-		break;
+
 	}
-*/
-/*	// get the node data
-	parent->out << "<CellMesh> id:" + id + " getting the mesh node data..." << std::endl;
-	while(getline(cell_file, line)){
-		if(line != "\"distance to nearest lumen\"") continue;
-		else for(int i = 0; i < 6; i++) getline(cell_file, line); // skip six lines
-		node_data.resize(nodes_count, Eigen::NoChange);
-		for(tElement n = 0; n < nodes_count; n++){
-			getline(cell_file, line);
-			boost::split(tokens, line, boost::is_any_of(", "), boost::token_compress_on);
-			node_data(n, dist_lumen) = atof(tokens[1].c_str());
+	// get the surface triangles (int32 count, 3x-int32 vertex indices, float32 dnl)
+	cell_file.read(reinterpret_cast<char *>(&i32), sizeof(i32));
+	surface_triangles_count = i32;
+	surface_triangles.resize(surface_triangles_count, Eigen::NoChange);
+	dnl.resize(surface_triangles_count, Eigen::NoChange);
+	for(int n=0; n<surface_triangles_count; n++){
+		for(int m=0; m<3; m++){
+			cell_file.read(reinterpret_cast<char *>(&i32), sizeof(i32));
+			surface_triangles(n,m) = i32-1; // change to zero indexed
 		}
-		break;
+		cell_file.read(reinterpret_cast<char *>(&f32), sizeof(f32));
+		dnl(n) = f32;
 	}
-*/
+	// get the element tetrahedrons (int32 count, 4x-int32 vertex indices)
+	cell_file.read(reinterpret_cast<char *>(&i32), sizeof(i32));
+	tetrahedrons_count = i32;
+	tetrahedrons.resize(tetrahedrons_count, Eigen::NoChange);
+	for(int n=0; n<tetrahedrons_count; n++){
+		for(int m=0; m<4; m++){
+			cell_file.read(reinterpret_cast<char *>(&i32), sizeof(i32));
+			tetrahedrons(n,m) = i32-1; // change to zero indexed
+		}
+	}
+	// get the apical triangles (int32 count, int32 triangle indices)
+	cell_file.read(reinterpret_cast<char *>(&i32), sizeof(i32));
+	apical_triangles_count = i32;
+	apical_triangles.resize(apical_triangles_count, Eigen::NoChange);
+	for(int n=0; n<apical_triangles_count; n++){
+		cell_file.read(reinterpret_cast<char *>(&i32), sizeof(i32));
+		apical_triangles(n) = i32-1; // change to zero indexed
+	}
+	// get the basal triangles (int32 count, int32 triangle indices)
+	cell_file.read(reinterpret_cast<char *>(&i32), sizeof(i32));
+	basal_triangles_count = i32;
+	basal_triangles.resize(basal_triangles_count, Eigen::NoChange);
+	for(int n=0; n<basal_triangles_count; n++){
+		cell_file.read(reinterpret_cast<char *>(&i32), sizeof(i32));
+		basal_triangles(n) = i32-1; // change to zero indexed
+	}
+	// get the cell-to-cell data (int32 count, 3x-int32 this_triamgle, other_cell, other_triangle)
+	cell_file.read(reinterpret_cast<char *>(&i32), sizeof(i32));
+	common_triangles_count = i32;
+	common_triangles.resize(common_triangles_count, Eigen::NoChange);
+	for(int n=0; n<common_triangles_count; n++){
+		for(int m=0; m<3; m++){
+			cell_file.read(reinterpret_cast<char *>(&i32), sizeof(i32));
+		    if (i32 < 1) {
+		        std::cerr << "<CellMesh> ERROR: "<< m << ", " << n << std::endl;
+//		        exit(1);
+		    }
+			common_triangles(n,m) = i32-1; // change to zero indexed
+//	        std::cerr << "<CellMesh> ERROR: "<< common_triangles(n,2) << std::endl;
+		}
+	}
 	cell_file.close();
 }
 
@@ -146,4 +134,5 @@ void cCellMesh::print_info(){
 	parent->out << "<CellMesh> id:" + id + " surface_triangles_count: " << surface_triangles_count << std::endl;
 	parent->out << "<CellMesh> id:" + id + " apical_triangles_count: " << apical_triangles_count << std::endl;
 	parent->out << "<CellMesh> id:" + id + " basal_triangles_count: " << basal_triangles_count << std::endl;
+	parent->out << "<CellMesh> id:" + id + " common_triangles_count: " << common_triangles_count << std::endl;
 }
