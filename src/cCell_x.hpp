@@ -49,6 +49,7 @@ typedef Eigen::Array<tCalcs, REF_MASS_SIZE, REF_MASS_SIZE> ArrayRefMass;
 typedef Eigen::Triplet<tCalcs> Triplet;
 
 class cCell_x {
+friend class cAcinus;
 friend class cCellMesh;
 friend class cVCLSolver;
 public:

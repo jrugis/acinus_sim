@@ -14,12 +14,14 @@
 
 class cParotid;
 class cCell_x;
+class cCellMesh;
 
 class cAcinus {
 friend class cCell_x;
 public:
 	cAcinus(int id, cParotid* parent);
 	virtual ~cAcinus();
+	void check_common();
 	void step();
 
 private:

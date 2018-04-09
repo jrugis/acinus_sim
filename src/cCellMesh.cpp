@@ -122,8 +122,10 @@ void cCellMesh::get_mesh(std::string file_name){
 //		        exit(1);
 		    }
 			common_triangles(n,m) = i32-1; // change to zero indexed
+//			parent->out << i32-1 << " ";
 //	        std::cerr << "<CellMesh> ERROR: "<< common_triangles(n,2) << std::endl;
 		}
+//		parent->out << std::endl;
 	}
 	cell_file.close();
 }
