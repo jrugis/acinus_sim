@@ -69,7 +69,6 @@ void cCellMesh::get_mesh(std::string file_name){
 			cell_file.read(reinterpret_cast<char *>(&f32), sizeof(f32));
 			vertices(n,m) = f32;
 		}
-
 	}
 	// get the surface triangles (int32 count, 3x-int32 vertex indices, float32 dnl)
 	cell_file.read(reinterpret_cast<char *>(&i32), sizeof(i32));
@@ -117,15 +116,8 @@ void cCellMesh::get_mesh(std::string file_name){
 	for(int n=0; n<common_triangles_count; n++){
 		for(int m=0; m<3; m++){
 			cell_file.read(reinterpret_cast<char *>(&i32), sizeof(i32));
-		    if (i32 < 1) {
-		        std::cerr << "<CellMesh> ERROR: "<< m << ", " << n << std::endl;
-//		        exit(1);
-		    }
 			common_triangles(n,m) = i32-1; // change to zero indexed
-//			parent->out << i32-1 << " ";
-//	        std::cerr << "<CellMesh> ERROR: "<< common_triangles(n,2) << std::endl;
 		}
-//		parent->out << std::endl;
 	}
 	cell_file.close();
 }

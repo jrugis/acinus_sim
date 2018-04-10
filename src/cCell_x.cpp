@@ -16,24 +16,27 @@
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/split.hpp>
 
+#include "defs.hpp"
 #include "cAcinus.hpp"
 #include "cCellMesh.hpp"
 #include "cVCLSolver.hpp"
 #include "cCell_x.hpp"
 
-cCell_x::cCell_x(int i, cAcinus* p) {
-	parent = p;
+cCell_x::cCell_x(int i, cAcinus* pp) {
+	parent = pp;
 	id = parent->id + "c" + std::to_string(i);
 	out.open(id + ".out");
 
 	mesh = new cCellMesh(id, this);
 	mesh->print_info();
 
-	//get_parameters();
-	//make_matrices();  // create the constant matrices
-	//init_u();
-	//out << "<Cell_x> id:" << id << " creating a solver object..." << std::endl;
-    //solver = new cVCLSolver(sparseA, this);
+	get_parameters();
+	make_matrices();  // create the constant matrices
+
+	time_steps = p[numT];
+	init_u();
+	out << "<Cell_x> id:" << id << " creating a solver object..." << std::endl;
+    solver = new cVCLSolver(sparseA, this);
 }
 
 cCell_x::~cCell_x() {
@@ -43,11 +46,11 @@ cCell_x::~cCell_x() {
 
 void cCell_x::init_u(){
 	out << "<Cell_x> id:" << id << " initialising the solution matrix..." << std::endl;
-//	tElement np = mesh->nodes_count;
-//	u.resize(VARIABLES * np, numt); // NOTE: the variables ordering is c, ip, h, ce
-//	u.block(0, 0, np, 1) = MatrixXXC().Constant(np, 1, p[c0]);
-//	u.block(np, 0, np, 1) = MatrixXXC().Constant(np, 1, p[ip0]);
-//	u.block(2 * np, 0, np, 1) = MatrixXXC().Constant(np, 1, p[ce0]);
+	tElement np = mesh->tetrahedrons_count;
+	u.resize(VARIABLES * np, time_steps); // NOTE: the variables ordering is c, ip, h, ce
+	u.block(0, 0, np, 1) = MatrixXXC().Constant(np, 1, p[c0]);
+	u.block(np, 0, np, 1) = MatrixXXC().Constant(np, 1, p[ip0]);
+	u.block(2 * np, 0, np, 1) = MatrixXXC().Constant(np, 1, p[ce0]);
 }
 
 Array1VC cCell_x::getbodyreactions(tCalcs c, tCalcs ip, tCalcs ce, tCalcs ipr_f, tCalcs plc_f){
@@ -68,18 +71,19 @@ Array1VC cCell_x::getbodyreactions(tCalcs c, tCalcs ip, tCalcs ce, tCalcs ipr_f,
 
 ArrayRefMass cCell_x::make_ref_mass(){
 	ArrayRefMass ref_mass;
-//	tCalcs v = (1.0 / 6.0) * 0.25 * 0.25;
-//	for(int i = 0; i < REF_MASS_SIZE; i++){
-//		for(int j = 0; j < REF_MASS_SIZE; j++){
-//			ref_mass(i, j) = v;
-//		}
-//	}
+	tCalcs v = (1.0 / 6.0) * 0.25 * 0.25;
+	for(int i = 0; i < REF_MASS_SIZE; i++){
+		for(int j = 0; j < REF_MASS_SIZE; j++){
+			ref_mass(i, j) = v;
+		}
+	}
 	return ref_mass;
 }
 
 void cCell_x::make_matrices(){
-/*	tElement np = mesh->nodes_count;
 
+	tIndex np = mesh->vertices_count;
+/*
 	node_data.resize(np, Eigen::NoChange);
 	out << "<Cell_x> id:" << id << " calculating the spatial factors..." << std::endl;
 	for(tElement n = 0; n < (np); n++){ // for each node...
@@ -90,7 +94,7 @@ void cCell_x::make_matrices(){
 		node_data(n, PLC_n) = ((mesh->node_data(n, dist_surface) < p[PLCds])
 			and (mesh->node_data(n, dist_lumen) >= p[PLCdl])) ? 1.0 : 0.0;
 	}
-
+*/
 	// make the reference mass matrix
 	ArrayRefMass ref_mass;
 	ref_mass = make_ref_mass();
@@ -103,20 +107,22 @@ void cCell_x::make_matrices(){
 	stiffp = stiffp.Zero(np, np);
 	stiffce = stiffce.Zero(np, np);
 	small_mass = small_mass.Zero(np, np);
-	element_data.resize(mesh->volume_elements_count, Eigen::NoChange);
+	element_data.resize(mesh->tetrahedrons_count, Eigen::NoChange);
 
-	for(tElement n = 0; n < (mesh->volume_elements_count); n++){ // for each volume element...
-		Eigen::Matrix<tElement,1,4> vi;      // tetrahedron vertex indices
-		vi = mesh->volume_elements.block<1,4>(n, 0);
+	for(tIndex n = 0; n < (mesh->tetrahedrons_count); n++){ // for each volume element...
+		Eigen::Matrix<tIndex,1,4> vi;      // tetrahedron vertex indices
 
+		vi = mesh->tetrahedrons.block<1,4>(n, 0);
+/*
 		element_data(n, IPR_e) = 0.25 *     // element ipr spatial factor
 			(node_data(vi[0], IPR_n) + node_data(vi[1], IPR_n) + node_data(vi[2], IPR_n) + node_data(vi[3], IPR_n));
 		element_data(n, PLC_e) = 0.25 *     // element plc spatial factor
 			(node_data(vi[0], PLC_n) + node_data(vi[1], PLC_n) + node_data(vi[2], PLC_n) + node_data(vi[3], PLC_n));
+*/
 
 		Eigen::Matrix<tCoord,4,3> vert; // tetrahedron vertex coordinates
 		for(int i = 0; i < 4; i++)
-			vert.block<1,3>(i, 0) = mesh->coordinates.block<1,3>(tElement(vi(i)), 0); // why is typecast needed???
+			vert.block<1,3>(i, 0) = mesh->vertices.block<1,3>(tElement(vi(i)), 0); // why is typecast needed???
 
 		Eigen::Matrix<tCoord,3,3> J;    // tetrahedron edge vectors
 		for(int i = 0; i < 3; i++)
@@ -128,7 +134,7 @@ void cCell_x::make_matrices(){
 
 		tCalcs Ic = V * p[Dc]; // diffusion coefficients
 		tCalcs Ip = V * p[Dp];
-		tCalcs Ice = V * p[Dce];
+		tCalcs Ice = V * p[De];
 
 		Eigen::Matrix<tCoord,4,4> M, C, G;
 		M.col(0) << 1, 1, 1, 1;
@@ -172,6 +178,7 @@ void cCell_x::make_matrices(){
 		stiffce(vi(3), vi(2)) = stiffce(vi(2), vi(3));
 		small_mass(vi(3), vi(2)) = small_mass(vi(2), vi(3));
 	}
+
 
     // construct the mass matrix from a list of triplets (non zero elements)
     std::vector<Triplet> triplet_list;
@@ -234,8 +241,7 @@ void cCell_x::make_matrices(){
     
     // make the A matrix
     sparseA.resize(VARIABLES * np, VARIABLES * np);
-    sparseA = sparseMass + (p[delt] * sparseStiff);
-*/
+    sparseA = sparseMass + (p[delT] * sparseStiff);
 }
 
 void cCell_x::fatal_error(std::string msg){
@@ -327,29 +333,26 @@ MatrixX1C cCell_x::make_load(long i){
 }
 
 void cCell_x::get_parameters(){
-//	std::string file_name = parent->id + ".dat";
-//	std::ifstream model_file(file_name); // open the model parameters file
-//	std::string line;                    // file line buffer
-//  std::vector <std::string> tokens;    // tokenized line
+	std::string file_name = parent->id + ".dat";
+	std::ifstream model_file(file_name); // open the model parameters file
+	std::string line;                    // file line buffer
+	std::vector <std::string> tokens;    // tokenized line
 
     // check the file is open
-//    if (not model_file.is_open()) {
-//       fatal_error("the model parameters file " + file_name + " could not be opened");
-//    }
+    if (not model_file.is_open()) {
+       fatal_error("the model parameters file " + file_name + " could not be opened");
+    }
 
-//	out << "<Cell_x> id:" << id << " reading model parameters..." << std::endl;
-//	int n = 0;   // read in the model parameters
-//  while(getline(model_file, line)){
-//		if(line.data()[0] == '%') continue;
-//		boost::split(tokens, line, boost::is_any_of(", "), boost::token_compress_on);
-//		if((n + tokens.size()) > PCOUNT) fatal_error("too many parameters in the model parameters file");
-//		for(unsigned int m = 0; m < tokens.size(); m++) p[n++] = atof(tokens[m].c_str());
-//    }
-//	model_file.close();
-//	if(n != PCOUNT) fatal_error("too few parameters in the model parameters file");
-//	numt = p[tend] / p[delt];
-//	plc_st = p[PLCsrt] / p[delt];
-//	plc_ft = p[PLCfin] / p[delt];
+	out << "<Cell_x> id:" << id << " reading model parameters..." << std::endl;
+	int n = 0;   // read in the model parameters
+	while(getline(model_file, line)){
+		if(line.data()[0] == '%') continue;
+		boost::split(tokens, line, boost::is_any_of(", "), boost::token_compress_on);
+		if((n + tokens.size()) > PCOUNT) fatal_error("too many parameters in the model parameters file");
+		for(unsigned int m = 0; m < tokens.size(); m++) p[n++] = atof(tokens[m].c_str());
+    }
+	model_file.close();
+	if(n != PCOUNT) fatal_error("too few parameters in the model parameters file");
 }
 
 void cCell_x::save_matrix_reduce(std::string file_name, MatrixXXC mat){

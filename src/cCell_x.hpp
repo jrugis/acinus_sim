@@ -10,13 +10,14 @@
 
 #include <fstream>
 #include <string>
-#include <Eigen/Dense>
-#include <Eigen/Sparse>
+//#include <Eigen/Dense>
+//#include <Eigen/Sparse>
 
 class cAcinus;
 class cCellMesh;
 class cVCLSolver;
 
+#include "defs.hpp"
 #include "cVCLSolver.hpp"
 
 #define VARIABLES 3 // the number of diffusing model variables
@@ -24,7 +25,7 @@ class cVCLSolver;
 
 // the 3D model parameters
 enum model_parameters{ \
-	delt, tend, reduce, \
+	delT, totalT, numT, reduce, \
 	PLCsrt, PLCfin, \
 	IPRdn, IPRdf, IPRmin, \
 	PLCds, PLCdl, \
@@ -67,10 +68,10 @@ private:
     cVCLSolver *solver;
 
 	tCalcs p[PCOUNT]; // the model parameters array
-	long numt, plc_st, plc_ft; // number of time steps, PLC start and finish time steps
 	Eigen::Array<tCalcs, Eigen::Dynamic, MODELNCOUNT> node_data;
 	Eigen::Array<tCalcs, Eigen::Dynamic, MODELECOUNT> element_data;
 
+	tIndex time_steps;
 	MatrixXXC u; // solution matrix
 	SparseMatrixTCalcs sparseA, sparseMass; // A and mass matrices
 

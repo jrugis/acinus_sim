@@ -13,11 +13,7 @@
 
 class cCell_x;
 
-typedef double tCoord;
-typedef double tDist;
-typedef long tIndex;
-
-//typedef double tCalcs; // MOVE THIS????
+#include "defs.hpp"
 
 class cCellMesh {
 public:
@@ -32,9 +28,9 @@ public:
 	Eigen::Array<tIndex, Eigen::Dynamic, 3, Eigen::RowMajorBit> surface_triangles;
 	Eigen::Array<tIndex, Eigen::Dynamic, 4, Eigen::RowMajorBit> tetrahedrons;
 	Eigen::Array<tIndex, Eigen::Dynamic, 3, Eigen::RowMajorBit> common_triangles;
-	Eigen::Array<tDist, Eigen::Dynamic, 1> dnl;
 	Eigen::Array<tIndex, Eigen::Dynamic, 1> apical_triangles;
 	Eigen::Array<tIndex, Eigen::Dynamic, 1> basal_triangles;
+	Eigen::Array<tDist, Eigen::Dynamic, 1> dnl;
 
 private:
 	std::string id;

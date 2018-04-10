@@ -8,8 +8,6 @@
 #ifndef CVCLSOLVER_H_
 #define CVCLSOLVER_H_
 
-typedef double tCalcs;
-
 #include <string>
 #include <Eigen/Dense>
 #include <Eigen/Sparse>
